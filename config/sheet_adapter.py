@@ -89,7 +89,7 @@ def get_approved_emails():
     else: 
         print("Using local JSON file for GCP service account")
     
-    print("Using SHEET_ID:", SHEET_ID)    
+    # print("Using SHEET_ID:", SHEET_ID)    
     sheet = client.open_by_key(SHEET_ID).worksheet("Users")
     data = sheet.get_all_records()
 

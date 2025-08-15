@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from config.credentials_loader import load_gcp_credentials  
 # pages/codevalidator.py
 
 SHEET_ID='1xhk2T2Xk-2CtkXPNeBlPb0jtDGLmm6p4x7S2PHjYeLs'
@@ -10,10 +11,18 @@ WORKSHEET_NAME = "CouponCodes"
 
 def connect_to_sheet(sheet_name):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("config/tnsdashboard-service-acct.json", scope)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open_by_key(SHEET_ID)
-    return spreadsheet.worksheet(WORKSHEET_NAME)
+
+    if "gcp_service_account" in st.secrets:
+        # print("Using Streamlit secrets for GCP service account")
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        # creds = ServiceAccountCredentials.from_json_keyfile_name("config/tnsdashboard-service-acct.json", scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+
+        client = gspread.authorize(creds)
+        spreadsheet = client.open_by_key(SHEET_ID)
+        return spreadsheet.worksheet(WORKSHEET_NAME)
+    else: 
+        print("Using local JSON file for GCP service account")
 
 
 # EXCEL_PATH = "coupons.xlsx"
@@ -33,7 +42,6 @@ def find_coupon(df, code):
 
 def update_coupon(sheet, df, code, user_email, expiry_date, comments):
     idx = df[df['CouponCode'].str.upper() == code.strip().upper()].index[0]
-    print (f"Updating coupon at index: {idx}")
     row_number = idx + 2  # account for header row
     sheet.update_cell(row_number, 2, "Expired")  # Status
     sheet.update_cell(row_number, 3, user_email)  # Updated By
@@ -81,37 +89,9 @@ if 'validated_record' in st.session_state:
             submit = st.form_submit_button("Mark as Expired")
 
             if submit:
-                print(f"Updating coupon: {code_input}, user_email: {user_email}, expiry_date: {expiry_date}, comments: {comments}")
+                # print(f"Updating coupon: {code_input}, user_email: {user_email}, expiry_date: {expiry_date}, comments: {comments}")
                 update_coupon(sheet, df, code_input, user_email, expiry_date, comments)
                 st.success("✅ Coupon marked as expired.")
                 # df = load_sheet_as_df(sheet)
                 st.session_state.pop('validated_record')
                 st.rerun()
-
-
-
-# if st.button("Validate"):
-#     record = find_coupon(df, code_input)
-#     if record is None:
-#         st.error("❌ CouponCode not found.")
-#     else:
-#         st.write(f"**Status:** {record['Status']}")
-#         if record['Status'].lower() == "expired":
-#             st.warning("This code is already marked as expired.")
-#         else:
-#             with st.form("expire_form"):
-#                 expiry_date = st.date_input("Expiry Date")
-#                 comments = st.text_area("Comments (max 256 chars)", max_chars=256)
-#                 submit = st.form_submit_button("Mark as Expired")
-#                 print(f"Form submitted with expiry_date: {expiry_date}, comments: {comments}")
-#                 if not expiry_date:
-#                     st.error("Please select an expiry date.")
-#                 if submit:
-#                     print(f"Updating coupon: {code_input}, user_email: {user_email}, expiry_date: {expiry_date}, comments: {comments}" )
-#                     update_coupon(sheet, df, code_input, user_email, expiry_date, comments)
-#                     st.success("✅ Coupon marked as expired.")
-#                     st.experimental_rerun()
-#                 else:
-#                     st.info("Fill the form and click 'Mark as Expired' to update the status.")
-# else:
-#     st.info("Enter a CouponCode to validate.")  

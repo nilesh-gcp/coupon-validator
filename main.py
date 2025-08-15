@@ -22,10 +22,10 @@ def main():
                 if email in approved_emails:
                     st.session_state.user_info = user_info  # Persist user info
                     st.success(f"Welcome, {email}!")
-                    print("approved email:", approved_emails)
-                    print ("user email:", email)
+                    # print("approved email:", approved_emails)
+                    # print ("user email:", email)
                 else:
-                    print("approved email:", approved_emails)
+                    # print("approved email:", approved_emails)
                     print ("user email:", email)
                     st.error("Access denied.")
                     st.stop()

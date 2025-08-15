@@ -23,7 +23,7 @@ def load_gcp_credentials(scope, *, dev_mode=False):
         creds_dict = dict(raw_creds)  # Convert AttrDict to dict
 
         # Validate required fields
-        print("🔍 Raw private_key from secrets:", repr(creds_dict["private_key"]))
+        # print("🔍 Raw private_key from secrets:", repr(creds_dict["private_key"]))
         required_keys = ["private_key", "client_email", "token_uri"]
         missing = [k for k in required_keys if not creds_dict.get(k)]
         if missing:
@@ -34,7 +34,7 @@ def load_gcp_credentials(scope, *, dev_mode=False):
         if not pk.strip().startswith("-----BEGIN PRIVATE KEY-----"):
             raise ValueError("Invalid private key format.")
         creds_dict["private_key"] = pk  # Update before passing to Google
-        print("🔍 Processed private_key:", repr(creds_dict["private_key"]))
+        # print("🔍 Processed private_key:", repr(creds_dict["private_key"]))
 
         if dev_mode:
             logging.info("✅ GCP credentials loaded successfully.")

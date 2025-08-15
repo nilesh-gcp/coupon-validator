@@ -22,7 +22,7 @@ def get(key: str, default=None):
     Priority: Streamlit secrets > .env > default
     """
     if STREAMLIT and key in st.secrets:
-        print(f"Using Streamlit secret for {key}", st.secrets[key])
+        # print(f"Using Streamlit secret for {key}", st.secrets[key])
         return st.secrets[key]
 
     return os.getenv(key, default)
