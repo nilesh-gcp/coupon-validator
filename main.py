@@ -6,6 +6,7 @@ from config.sheet_adapter import get_approved_emails
 def main():
     # If user info is not yet in session, try to authenticate
     approved_emails = get_approved_emails()  # Load from Google Sheet
+
     if "user_info" not in st.session_state:
         query_params = st.query_params
         auth_code = query_params.get("code")

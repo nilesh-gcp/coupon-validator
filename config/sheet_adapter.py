@@ -2,7 +2,9 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 from config.config import get
-
+import streamlit as st
+import json
+from config.credentials_loader import load_gcp_credentials
 
 
 # SHEET_ID = "1xhk2T2Xk-2CtkXPNeBlPb0jtDGLmm6p4x7S2PHjYeLs"  # Replace with actual ID
@@ -22,16 +24,20 @@ def get_sheet():
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive"
     ]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("config/tnsdashboard-service-acct.json", scope)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open_by_key(SHEET_ID)
-    return spreadsheet.worksheet(WORKSHEET_NAME)
 
-# def get_user_reservations(email):
-#     sheet = get_sheet()
-#     rows = sheet.get_all_records()
-#     return [r for r in rows if r["user_email"] == email]
+    if "gcp_service_account" in st.secrets:
+        print("Using Streamlit secrets for GCP service account")
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        # creds = ServiceAccountCredentials.from_json_keyfile_name("config/tnsdashboard-service-acct.json", scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 
+        client = gspread.authorize(creds)
+        spreadsheet = client.open_by_key(SHEET_ID)
+        return spreadsheet.worksheet(WORKSHEET_NAME)
+    else: 
+        print("Using local JSON file for GCP service account")
+
+        # Reconstruct the private key with real newlines
 
 #  == Trial function ==
 def get_all_reservations():
@@ -72,13 +78,18 @@ def get_approved_emails():
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive"
     ]
-    print("Using SHEET_ID:", SHEET_ID)
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
-        "config/tnsdashboard-service-acct.json", 
-        scope
-    )
-    client = gspread.authorize(creds)
     
+    if "gcp_service_account" in st.secrets:
+        print("Using Streamlit secrets for GCP service account")
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        # creds = ServiceAccountCredentials.from_json_keyfile_name("config/tnsdashboard-service-acct.json", scope)
+        #creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        creds = load_gcp_credentials(scope, dev_mode=True)
+        client = gspread.authorize(creds)
+    else: 
+        print("Using local JSON file for GCP service account")
+    
+    print("Using SHEET_ID:", SHEET_ID)    
     sheet = client.open_by_key(SHEET_ID).worksheet("Users")
     data = sheet.get_all_records()
 
